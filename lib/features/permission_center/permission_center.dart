@@ -8,17 +8,32 @@ class PermissionCenterPage extends StatefulWidget {
   State<PermissionCenterPage> createState() => _PermissionCenterPageState();
 }
 
-class _PermissionCenterPageState extends State<PermissionCenterPage> {
+class _PermissionCenterPageState extends State<PermissionCenterPage> with WidgetsBindingObserver {
   Map<String, dynamic> _status = {};
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _refreshStatus();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _refreshStatus();
+    }
   }
 
   Future<void> _refreshStatus() async {
     final status = await PlatformChannel.getPermissionStatus();
+    if (!mounted) return;
     setState(() {
       _status = status ?? {};
     });
@@ -47,20 +62,14 @@ class _PermissionCenterPageState extends State<PermissionCenterPage> {
             const SizedBox(height: 12),
             _row('Accessibility Service', 'accessibility', () async {
               await PlatformChannel.openAccessibilitySettings();
-              await Future.delayed(const Duration(milliseconds: 500));
-              _refreshStatus();
             }),
 
             _row('Usage Access', 'usage', () async {
               await PlatformChannel.openUsageAccessSettings();
-              await Future.delayed(const Duration(milliseconds: 500));
-              _refreshStatus();
             }),
 
             _row('Notification Access (optional)', 'notifications', () async {
               await PlatformChannel.openNotificationListenerSettings();
-              await Future.delayed(const Duration(milliseconds: 500));
-              _refreshStatus();
             }),
 
             const Spacer(),

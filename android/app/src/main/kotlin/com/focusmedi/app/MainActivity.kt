@@ -87,13 +87,19 @@ class MainActivity: FlutterActivity() {
     }
 
     private fun isAccessibilityEnabled(): Boolean {
-        try {
-            val svc = Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
-            if (svc != null && svc.contains(packageName)) return true
+        return try {
+            val enabled = Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
+            if (enabled.isNullOrEmpty()) return false
+            val parts = enabled.split(':')
+            for (svc in parts) {
+                val comp = android.content.ComponentName.unflattenFromString(svc)
+                if (comp != null && comp.packageName == packageName) return true
+            }
+            false
         } catch (e: Exception) {
             Log.w("MainActivity", "isAccessibilityEnabled check failed", e)
+            false
         }
-        return false
     }
 
     private fun hasUsageAccess(): Boolean {
@@ -108,8 +114,22 @@ class MainActivity: FlutterActivity() {
     }
 
     private fun hasNotificationPermission(): Boolean {
-        // For Android 13+, POST_NOTIFICATIONS is a runtime permission. We can check it here.
-        return checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        try {
+            // Check POST_NOTIFICATIONS (runtime permission for Android 13+)
+            val postOk = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            } else true
+
+            // Check Notification Listener enabled
+            val listeners = Settings.Secure.getString(contentResolver, "enabled_notification_listeners")
+            val listenerOk = listeners != null && listeners.split(':').any { it.contains(packageName) }
+
+            // Return true if either POST_NOTIFICATIONS or Notification Listener is available
+            return postOk || listenerOk
+        } catch (e: Exception) {
+            Log.w("MainActivity", "hasNotificationPermission check failed", e)
+        }
+        return false
     }
 
     private fun hasDndAccess(): Boolean {
