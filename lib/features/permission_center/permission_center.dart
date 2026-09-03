@@ -1,7 +1,38 @@
 import 'package:flutter/material.dart';
+import '../../core/platform/platform_channel.dart';
 
-class PermissionCenterPage extends StatelessWidget {
+class PermissionCenterPage extends StatefulWidget {
   const PermissionCenterPage({super.key});
+
+  @override
+  State<PermissionCenterPage> createState() => _PermissionCenterPageState();
+}
+
+class _PermissionCenterPageState extends State<PermissionCenterPage> {
+  Map<String, dynamic> _status = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshStatus();
+  }
+
+  Future<void> _refreshStatus() async {
+    final status = await PlatformChannel.getPermissionStatus();
+    setState(() {
+      _status = status ?? {};
+    });
+  }
+
+  Widget _row(String title, String key, VoidCallback onOpen) {
+    final granted = _status[key] == true;
+    return ListTile(
+      leading: Icon(granted ? Icons.check_circle : Icons.warning, color: granted ? Colors.green : Colors.orange),
+      title: Text(title),
+      subtitle: Text(granted ? 'Granted' : 'Required'),
+      trailing: ElevatedButton(onPressed: onOpen, child: Text(granted ? 'Open' : 'Enable')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,21 +45,24 @@ class PermissionCenterPage extends StatelessWidget {
           children: [
             const Text('Permissions required to enable Focus protection', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            const ListTile(
-              leading: Icon(Icons.accessibility_new),
-              title: Text('Accessibility Service'),
-              subtitle: Text('Required to detect when blocked apps become active.'),
-            ),
-            const ListTile(
-              leading: Icon(Icons.bar_chart),
-              title: Text('Usage Access'),
-              subtitle: Text('Required to reliably detect foreground application.'),
-            ),
-            const ListTile(
-              leading: Icon(Icons.notifications),
-              title: Text('Notification Access (optional)'),
-              subtitle: Text('Optional: allow selective notification behavior during Focus.'),
-            ),
+            _row('Accessibility Service', 'accessibility', () async {
+              await PlatformChannel.openAccessibilitySettings();
+              await Future.delayed(const Duration(milliseconds: 500));
+              _refreshStatus();
+            }),
+
+            _row('Usage Access', 'usage', () async {
+              await PlatformChannel.openUsageAccessSettings();
+              await Future.delayed(const Duration(milliseconds: 500));
+              _refreshStatus();
+            }),
+
+            _row('Notification Access (optional)', 'notifications', () async {
+              await PlatformChannel.openNotificationListenerSettings();
+              await Future.delayed(const Duration(milliseconds: 500));
+              _refreshStatus();
+            }),
+
             const Spacer(),
             ElevatedButton(
               onPressed: () {
