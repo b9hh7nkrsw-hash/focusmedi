@@ -30,4 +30,20 @@ class PlatformChannel {
   static Future<void> openUsageAccessSettings() async {
     await _channel.invokeMethod('openUsageAccessSettings');
   }
+
+  static Future<void> openNotificationListenerSettings() async {
+    await _channel.invokeMethod('openNotificationListenerSettings');
+  }
+
+  static Future<void> openDoNotDisturbSettings() async {
+    await _channel.invokeMethod('openDoNotDisturbSettings');
+  }
+
+  static Future<void> openAppDetails({String? package}) async {
+    await _channel.invokeMethod('openAppDetails', {'package': package});
+  }
+
+  static Future<void> openBatteryOptimizationSettings() async {
+    await _channel.invokeMethod('openBatteryOptimizationSettings');
+  }
 }
