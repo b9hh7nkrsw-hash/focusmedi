@@ -1,0 +1,5 @@
+CI trigger
+
+This edit re-triggers the Build APK workflow to produce a debug APK artifact for testing.
+
+Timestamp: 2026-09-03T19:12:30Z
