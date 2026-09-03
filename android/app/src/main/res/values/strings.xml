@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">Focusmedi</string>
+  <string name="accessibility_service_description">Allows Focusmedi to detect foreground apps so it can block selected apps while Focus Mode is active.</string>
+</resources>
