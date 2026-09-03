@@ -14,6 +14,8 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.10.5'
+      - name: Create Flutter project files if missing
+        run: flutter create -t app .
       - name: Install dependencies
         run: flutter pub get
       - name: Build debug APK
